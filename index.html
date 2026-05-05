@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JPRO</title>
+  <style>
+    :root {
+      --bg-main: #111b21;
+      --bg-header: #202c33;
+      --bg-chat: #0b141a;
+      --bg-input: #2a3942;
+      --bg-msg-recibido: #202c33;
+      --bg-msg-enviado: #005c4b;
+      --text-primary: #e9edef;
+      --text-secondary: #8696a0;
+      --verde: #00a884;
+      --borde: #2a3942;
+      --bg-fondo-chat: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    }
+    [data-tema="claro"] {
+      --bg-main: #ffffff;
+      --bg-header: #008069;
+      --bg-chat: #efeae2;
+      --bg-input: #ffffff;
+      --bg-msg-recibido: #ffffff;
+      --bg-msg-enviado: #d9fdd3;
+      --text-primary: #111b21;
+      --text-secondary: #667781;
+      --verde: #008069;
+      --borde: #e9edef;
+      --bg-fondo-chat: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg-main); color: var(--text-primary); transition: 0.3s; }
+    .pantalla { display: none; min-height: 100vh; }
+    .pantalla.activa { display: flex; flex-direction: column; }
+    
+    #bienvenida { justify-content: center; align-items: center; padding: 20px; background: var(--bg-main); }
+    #bienvenida .contenedor { max-width: 400px; text-align: center; }
+    #bienvenida .logo { width: 100px; height: 100px; background: var(--verde); border-radius: 50%; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+    #bienvenida h1 { color: var(--text-primary); font-size: 28px; margin-bottom: 20px; }
+    #bienvenida p { color: var(--text-secondary); margin: 20px 0; font-size: 14px; line-height: 1.5; }
+    
+    #numero { justify-content: center; align-items: center; padding: 20px; background: var(--bg-main); }
+    #numero .contenedor { max-width: 400px; width: 100%; text-align: center; }
+    #numero h2 { color: var(--text-primary); margin-bottom: 10px; }
+    #numero p { color: var(--text-secondary); margin-bottom: 30px; font-size: 14px; }
+    
+    input { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 8px; font-size: 16px; background: var(--bg-input); color: var(--text-primary); }
+    input::placeholder { color: var(--text-secondary); }
+    .btn { width: 100%; padding: 14px; margin: 15px 0; border: none; border-radius: 8px; background: var(--verde); color: var(--bg-main); font-size: 16px; font-weight: 600; cursor: pointer; }
+    .btn:active { opacity: 0.8; }
+    .error { color: #f15c6d; min-height: 20px; margin: 5px 0; font-size: 13px; }
+    
+    .header { background: var(--bg-header); padding: 10px 16px; display: flex; align-items: center; gap: 15px; height: 60px; }
+    .header h2 { color: var(--text-primary); font-size: 19px; font-weight: 500; flex: 1; }
+    .header-btn { background: none; border: none; color: var(--text-primary); font-size: 24px; cursor: pointer; padding: 8px; }
+    
+    #contactos { background: var(--bg-main); }
+    .lista-contactos { flex: 1; overflow-y: auto; }
+    .contacto { background: var(--bg-main); padding: 12px 16px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid var(--borde); }
+    .contacto:hover { background: var(--bg-header); }
+    .avatar { width: 49px; height: 49px; background: var(--verde); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 500; color: var(--bg-main); margin-right: 15px; font-size: 20px; }
+    .info-contacto { flex: 1; }
+    .nombre-contacto { font-weight: 400; font-size: 17px; color: var(--text-primary); margin-bottom: 2px; }
+    .numero-contacto { color: var(--text-secondary); font-size: 14px; }
+    .btn-flotante { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 16px; background: var(--verde); border: none; font-size: 24px; color: var(--bg-main); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+    
+    #agregar { background: var(--bg-main); }
+    #agregar .contenedor { max-width: 400px; width: 100%; padding: 20px; }
+    
+    #chat { background: var(--bg-chat); }
+    .chat-header { background: var(--bg-header); padding: 10px 16px; display: flex; align-items: center; gap: 15px; }
+    .chat-info { flex: 1; }
+    .chat-nombre { font-size: 16px; color: var(--text-primary); font-weight: 400; }
+    .chat-numero { font-size: 13px; color: var(--text-secondary); }
+    
+    #chat .mensajes { flex: 1; overflow-y: auto; padding: 12px; background-image: var(--bg-fondo-chat); background-color: var(--bg-chat); }
+    .mensaje { margin: 2px 0 8px; max-width: 65%; padding: 6px 7px 8px 9px; border-radius: 7.5px; position: relative; word-wrap: break-word; }
+    .enviado { background: var(--bg-msg-enviado); margin-left: auto; }
+    .recibido { background: var(--bg-msg-recibido); }
+    .texto-mensaje { font-size: 14.2px; color: var(--text-primary); line-height: 19px; }
+    .hora-mensaje { font-size: 11px; color: var(--text-secondary); margin-top: 2px; text-align: right; }
+    
+    .input-chat { display: flex; padding: 8px; background: var(--bg-header); gap: 8px; align-items: center; }
+    .input-chat input { flex: 1; margin: 0; padding: 9px 12px; border-radius: 8px; background: var(--bg-input); }
+    .input-chat button { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--verde); color: var(--bg-main); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #btnGrabar.grabando { background: #f15c6d; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    audio { max-width: 200px; height: 35px; }
+    
+    /* AJUSTES */
+    #ajustes { background: var(--bg-main); }
+    .lista-ajustes { flex: 1; overflow-y: auto; }
+    .seccion-ajuste { padding: 14px 16px; color: var(--verde); font-size: 14px; font-weight: 500; background: var(--bg-main); }
+    .item-ajuste { background: var(--bg-main); padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--borde); cursor: pointer; }
+    .item-ajuste:hover { background: var(--bg-header); }
+    .item-ajuste .info { display: flex; align-items: center; gap: 20px; flex: 1; }
+    .item-ajuste .icono { font-size: 22px; color: var(--text-secondary); width: 24px; }
+    .item-ajuste .texto { color: var(--text-primary); font-size: 16px; }
+    .item-ajuste .subtexto { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+    .switch { width: 50px; height: 28px; background: #667781; border-radius: 14px; position: relative; cursor: pointer; }
+    .switch.activo { background: var(--verde); }
+    .switch::after { content: ''; position: absolute; width: 24px; height: 24px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+    .switch.activo::after { left: 24px; }
+    .vacio { text-align: center; color: var(--text-secondary); padding: 40px 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div class="pantalla activa" id="bienvenida">
+    <div class="contenedor">
+      <div class="logo">💬</div>
+      <h1>Te damos la bienvenida a JPRO</h1>
+      <p>Lee nuestra Política de privacidad. Toca 'Aceptar y continuar' para aceptar los Términos de servicio de JPRO.</p>
+      <button class="btn" onclick="ir('numero')">ACEPTAR Y CONTINUAR</button>
+    </div>
+  </div>
+
+  <div class="pantalla" id="numero">
+    <div class="contenedor">
+      <h2>Ingresa tu número de teléfono</h2>
+      <p>JPRO necesita verificar tu número de teléfono</p>
+      <input type="tel" id="inputNumero" placeholder="Número de teléfono" maxlength="15">
+      <div id="errorNumero" class="error"></div>
+      <button class="btn" onclick="confirmarNumero()">SIGUIENTE</button>
+    </div>
+  </div>
+
+  <div class="pantalla" id="contactos">
+    <div class="header">
+      <h2>JPRO</h2>
+      <button class="header-btn" onclick="ir('ajustes')">⋮</button>
+    </div>
+    <div class="lista-contactos" id="listaContactos"></div>
+    <button class="btn-flotante" onclick="mostrarAgregar()">+</button>
+  </div>
+
+  <div class="pantalla" id="agregar">
+    <div class="header">
+      <button class="header-btn" onclick="volverContactos()">←</button>
+      <h2>Nuevo contacto</h2>
+      <div></div>
+    </div>
+    <div class="contenedor">
+      <input type="tel" id="numeroNuevo" placeholder="Número de teléfono" maxlength="15">
+      <input type="text" id="nombreNuevo" placeholder="Nombre">
+      <div id="errorAdd" class="error"></div>
+      <button class="btn" onclick="agregarContacto()">GUARDAR</button>
+    </div>
+  </div>
+
+  <div class="pantalla" id="chat">
+    <div class="chat-header">
+      <button class="header-btn" onclick="volverContactos()">←</button>
+      <div class="avatar" id="avatarChat"></div>
+      <div class="chat-info">
+        <div class="chat-nombre" id="nombreChat"></div>
+        <div class="chat-numero" id="numeroChat"></div>
+      </div>
+    <div class="mensajes" id="mensajes"></div>
+    <div class="input-chat">
+      <input type="text" id="inputMensaje" placeholder="Mensaje" onkeypress="manejarEnter(event)">
+      <button id="btnGrabar" onclick="toggleGrabacion()">🎤</button>
+      <button onclick="enviarMensaje()">➤</button>
+    </div>
+  </div>
+
+  <div class="pantalla" id="ajustes">
+    <div class="header">
+      <button class="header-btn" onclick="volverContactos()">←</button>
+      <h2>Ajustes</h2>
+      <div></div>
+    </div>
+    <div class="lista-ajustes">
+      <div class="seccion-ajuste">Chats</div>
+      <div class="item-ajuste" onclick="toggleTema()">
+        <div class="info">
+          <span class="icono">🌙</span>
+          <div>
+            <div class="texto">Tema</div>
+            <div class="subtexto" id="textoTema">Oscuro</div>
+          </div>
+        <div class="switch" id="switchTema"></div>
+      </div>
+      <div class="item-ajuste" onclick="cambiarFondo()">
+        <div class="info">
+          <span class="icono">🖼️</span>
+          <div>
+            <div class="texto">Fondo de pantalla</div>
+            <div class="subtexto">Cambiar fondo del chat</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="seccion-ajuste">Copia de seguridad</div>
+      <div class="item-ajuste" onclick="exportarBackup()">
+        <div class="info">
+          <span class="icono">📤</span>
+          <div>
+            <div class="texto">Exportar contactos</div>
+            <div class="subtexto">Descargar archivo.json</div>
+          </div>
+        </div>
+      <div class="item-ajuste" onclick="document.getElementById('inputImport').click()">
+        <div class="info">
+          <span class="icono">📥</span>
+          <div>
+            <div class="texto">Importar contactos</div>
+            <div class="subtexto">Cargar archivo.json</div>
+          </div>
+        <input type="file" id="inputImport" accept=".json" style="display:none" onchange="importarBackup(event)">
+      </div>
+
+      <div class="seccion-ajuste">Notificaciones</div>
+      <div class="item-ajuste" onclick="toggleNotificaciones()">
+        <div class="info">
+          <span class="icono">🔔</span>
+          <div>
+            <div class="texto">Notificaciones</div>
+            <div class="subtexto" id="textoNotif">Activadas</div>
+          </div>
+        <div class="switch activo" id="switchNotif"></div>
+      </div>
+
+      <div class="seccion-ajuste">Cuenta</div>
+      <div class="item-ajuste" onclick="cerrarSesion()">
+        <div class="info">
+          <span class="icono">🚪</span>
+          <div>
+            <div class="texto">Cerrar sesión</div>
+            <div class="subtexto">Salir de tu cuenta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
