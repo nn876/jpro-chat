@@ -14,44 +14,31 @@
             --bg-header: #202c33;
             --bg-chat: #0b141a;
             --bg-input: #2a3942;
-            --bg-msg-recibido: #202c33;
-            --bg-msg-enviado: #005c4b;
             --text-primary: #e9edef;
             --text-secondary: #8696a0;
             --verde: #00a884;
-            --borde: #2a3942;
+            --verde-hover: #06cf9c;
         }
-
         * { box-sizing: border-box; }
-
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            background-color: var(--bg-main);
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh; height: 100dvh;
+            overflow: hidden; background-color: var(--bg-main);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
-        #app {
-            width: 100%;
-            height: 100%;
-        }
-
-       .scrollbar-hide::-webkit-scrollbar { display: none; }
-       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-        input:focus { outline: 2px solid var(--verde); }
+        #app { width: 100%; height: 100%; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .page { display: none; width: 100%; height: 100%; }
+        .page.active { display: flex; }
     </style>
 </head>
 <body>
     <div id="app"></div>
 
     <script>
-        // TU CONFIG DE FIREBASE YA PUESTA
+        // TU CONFIG DE FIREBASE
         const firebaseConfig = {
           apiKey: "AIzaSyDWWb3B8oYYe_uiwllsDHsUtmzUv_SKcdU",
           authDomain: "jpro-chat.firebaseapp.com",
@@ -64,176 +51,207 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
         const app = document.getElementById('app');
 
-        // TEMPLATES
-        const LoginTemplate = `
-            <div class="w-full h-full flex items-center justify-center bg-[#111b21] p-4">
+        // RENDER INICIAL
+        app.innerHTML = `
+            <!-- LOGIN PAGE -->
+            <div id="loginPage" class="page active flex-col items-center justify-center bg-[#111b21] p-4">
                 <div class="w-full max-w-sm">
-                    <div class="text-center mb-10">
-                        <div class="w-20 h-20 bg-[#00a884] rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <div class="text-center mb-12">
+                        <div class="w-20 h-20 bg-[#00a884] rounded-full mx-auto mb-6 flex items-center justify-center">
                             <svg class="w-11 h-11 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.52 3.449C18.24 1.245 15.24 0.002 12.045 0 5.463 0.095 5.369.095 11.95c0 2.109.546 4.131 1.585 5.936L0 24l6.306-1.651c1.724.941 3.665 1.438 5.738 1.438h.005c6.581 0 11.95-5.368 11.95-11.95 0-3.194-1.242-6.194-3.479-8.388zM12.05 21.833c-1.821 0-3.606-.49-5.16-1.415l-.369-.219-3.741.98.998-3.647-.24-.374c-1.001-1.563-1.531-3.379-1.531-5.208 0-5.416 4.406-9.822 9.823-9.822 2.623 0 5.089 1.023 6.942 2.877 1.854 1.854 2.876 4.319 2.876 6.942 0 5.417-4.407 9.823-9.823 9.823zm5.398-7.349c-.296-.148-1.747-.862-2.018-.961-.271-.099-.469-.148-.667.148-.198.297-.764.961-.936 1.158-.173.198-.346.223-.642.074-.297-.148-1.254-.463-2.389-1.475-.883-.788-1.479-1.761-1.652-2.058-.173-.297-.018-.458.13-.605.134-.133.297-.347.445-.52.148-.174.198-.297.297-.495.099-.198.05-.371-.025-.519-.074-.148-.667-1.607-.914-2.201-.24-.578-.484-.499-.667-.509-.173-.01-.371-.012-.569-.012-.198 0-.519.074-.791.371s-1.039 1.015-1.039 2.475 1.064 2.871 1.212 3.068c.148.198 2.093 3.196 5.072 4.482.709.306 1.261.489 1.693.626.711.226 1.358.194 1.869.118.57-.085 1.747-.714 1.994-1.403.247-.69.247-1.281.173-1.403-.074-.122-.272-.196-.569-.345z"/></svg>
                         </div>
-                        <h1 class="text-3xl font-light text-[#e9edef]">JPRO</h1>
-                        <p class="text-[#8696a0] mt-2">Inicia sesión con tu correo</p>
+                        <h1 class="text-2xl font-normal text-[#e9edef] mb-2">Introduce tu número de teléfono</h1>
+                        <p class="text-[#8696a0] text-sm">JPRO necesitará verificar tu número de teléfono</p>
                     </div>
-                    <div class="space-y-3">
-                        <div class="flex bg-[#2a3942] rounded-lg items-center px-4">
-                            <svg class="w-5 h-5 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                            <input id="email" type="email" placeholder="Correo electrónico" class="w-full py-3 bg-transparent text-[#e9edef] placeholder-[#8696a0] border-0 focus:ring-0">
+                    
+                    <div class="space-y-4">
+                        <div class="bg-[#2a3942] rounded-lg px-4 py-2">
+                            <p class="text-xs text-[#00a884] mb-1">País</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[#e9edef]">Perú</span>
+                                <svg class="w-5 h-5 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
-                        <div class="flex bg-[#2a3942] rounded-lg items-center px-4">
-                            <svg class="w-5 h-5 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            <input id="password" type="password" placeholder="Contraseña" class="w-full py-3 bg-transparent text-[#e9edef] placeholder-[#8696a0] border-0 focus:ring-0">
+                        
+                        <div class="flex gap-2">
+                            <div class="bg-[#2a3942] rounded-lg px-4 py-3 w-20">
+                                <p class="text-xs text-[#00a884] mb-1">Cod.</p>
+                                <span class="text-[#e9edef]">+51</span>
+                            </div>
+                            <div class="bg-[#2a3942] rounded-lg px-4 py-3 flex-1">
+                                <p class="text-xs text-[#00a884] mb-1">Número de teléfono</p>
+                                <input id="phoneNumber" type="tel" placeholder="975 998 730" class="w-full bg-transparent text-[#e9edef] border-0 p-0 focus:ring-0 text-lg">
+                            </div>
                         </div>
-                        <button id="loginBtn" class="w-full py-3 bg-[#00a884] text-[#111b21] font-semibold rounded-lg active:scale-95 transition">Iniciar sesión</button>
-                        <button id="registerBtn" class="w-full py-3 text-[#00a884] text-sm">¿No tienes cuenta? Regístrate</button>
+                        
+                        <p class="text-xs text-[#8696a0] text-center">Te enviaremos un código por SMS para verificar tu número</p>
+                        
+                        <button id="loginBtn" class="w-full py-3 bg-[#00a884] text-[#111b21] font-medium rounded-full mt-6 active:bg-[#06cf9c]">SIGUIENTE</button>
                     </div>
                     <p id="errorMsg" class="text-red-500 text-center mt-4 text-sm h-4"></p>
+                    <div id="recaptcha-container" class="mt-4"></div>
                 </div>
             </div>
-        `;
 
-        const ChatTemplate = `
-            <div class="w-full h-full flex bg-[#111b21]">
-                <div id="sidebar" class="w-full md:w-[400px] lg:w-[420px] border-r border-[#2a3942] flex flex-col">
+            <!-- CHAT PAGE -->
+            <div id="chatPage" class="page">
+                <div class="w-full md:w-[400px] border-r border-[#2a3942] flex flex-col">
                     <header class="bg-[#202c33] px-4 py-2.5 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-[#6b7c85] rounded-full flex items-center justify-center text-white font-semibold">
-                                <span id="userInitial">J</span>
-                            </div>
+                            <div id="userAvatar" class="w-10 h-10 bg-[#6b7c85] rounded-full flex items-center justify-center text-white font-semibold"></div>
                             <h1 class="text-xl font-medium text-[#e9edef]">JPRO</h1>
                         </div>
                         <div class="relative">
-                            <button id="menuBtn" class="p-2 rounded-full hover:bg-[#2a3942] active:bg-[#374248]">
+                            <button id="menuBtn" class="p-2 rounded-full hover:bg-[#2a3942]">
                                 <svg class="w-6 h-6 text-[#aebac1]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2.9-2 2.9 2 2 2zm0 2c-1.1 0-2.9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2.9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                             </button>
                             <div id="menuDropdown" class="hidden absolute right-0 mt-1 w-52 bg-[#233138] rounded-md shadow-xl py-2 z-50">
-                                <button id="newGroupBtn" class="block w-full text-left px-4 py-3 text-[15px] text-[#e9edef] hover:bg-[#2a3942]">Nuevo grupo</button>
-                                <button id="perfilBtn" class="block w-full text-left px-4 py-3 text-[15px] text-[#e9edef] hover:bg-[#2a3942]">Perfil</button>
+                                <button id="newGroupBtn" class="block w-full text-left px-4 py-3 text-[#e9edef] hover:bg-[#2a3942]">Nuevo grupo</button>
+                                <button id="perfilBtn" class="block w-full text-left px-4 py-3 text-[#e9edef] hover:bg-[#2a3942]">Perfil</button>
+                                <button id="configBtn" class="block w-full text-left px-4 py-3 text-[#e9edef] hover:bg-[#2a3942]">Configuración</button>
                                 <div class="my-1 border-t border-[#2a3942]"></div>
-                                <button id="logoutBtn" class="block w-full text-left px-4 py-3 text-[15px] text-[#e9edef] hover:bg-[#2a3942]">Cerrar sesión</button>
+                                <button id="logoutBtn" class="block w-full text-left px-4 py-3 text-[#e9edef] hover:bg-[#2a3942]">Cerrar sesión</button>
                             </div>
                         </div>
                     </header>
-                    <div class="px-3 py-2 bg-[#111b21]">
-                        <div class="bg-[#202c33] rounded-lg flex items-center px-4 py-1.5">
-                            <svg class="w-5 h-5 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            <input type="text" placeholder="Buscar un chat" class="w-full bg-transparent text-[#e9edef] placeholder-[#8696a0] border-0 focus:ring-0 ml-3 text-sm">
-                        </div>
-                    </div>
-                    <div id="groupList" class="flex-1 overflow-y-auto scrollbar-hide bg-[#111b21]">
+                    <div id="chatList" class="flex-1 overflow-y-auto scrollbar-hide bg-[#111b21]">
                         <div class="p-8 text-center text-[#8696a0]">
-                            <p class="text-lg">No tienes chats aún</p>
-                            <p class="text-sm mt-2">Usa el menú ⋮ para crear un grupo</p>
+                            <p>No tienes chats aún</p>
+                            <p class="text-sm mt-2">Usa ⋮ para crear un grupo</p>
                         </div>
                     </div>
+                </div>
                 <div id="chatArea" class="hidden md:flex flex-1 items-center justify-center bg-[#0b141a] text-[#8696a0] border-b-[6px] border-[#00a884]">
                     <div class="text-center px-8">
-                        <div class="w-80 h-80 mx-auto mb-8 opacity-20">
-                            <svg viewBox="0 0 303 172" fill="#364147"><path d="M229.5 122.5c0 27.5-22.5 50-50 50h-50c-27.5 0-50-22.5-50-50s22.5-50 50-50h50c27.5 0 50 22.5 50 50z"></path></svg>
-                        </div>
                         <p class="text-3xl font-light text-[#d1d7db] mb-3">JPRO Web</p>
-                        <p class="text-sm text-[#8696a0]">Envía y recibe mensajes sin mantener tu teléfono conectado.</p>
+                        <p class="text-sm">Selecciona un chat para empezar</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIG PAGE -->
+            <div id="configPage" class="page flex-col bg-[#111b21]">
+                <header class="bg-[#202c33] px-4 py-4 flex items-center gap-6">
+                    <button id="backFromConfig" class="p-1">
+                        <svg class="w-6 h-6 text-[#aebac1]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
+                    <h1 class="text-xl text-[#e9edef]">Configuración</h1>
+                </header>
+                <div class="flex-1 overflow-y-auto">
+                    <div class="p-4 flex items-center gap-4 hover:bg-[#202c33]">
+                        <div class="w-12 h-12 bg-[#6b7c85] rounded-full flex items-center justify-center text-white text-xl">J</div>
+                        <div class="flex-1">
+                            <p class="text-[#e9edef] text-lg" id="configUserName">Usuario JPRO</p>
+                            <p class="text-[#8696a0] text-sm">Info.</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 border-t border-[#2a3942]">
+                        <div class="p-4 flex items-center gap-6 hover:bg-[#202c33]">
+                            <svg class="w-6 h-6 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span class="text-[#e9edef]">Notificaciones</span>
+                        </div>
+                        <div class="p-4 flex items-center gap-6 hover:bg-[#202c33]">
+                            <svg class="w-6 h-6 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <span class="text-[#e9edef]">Privacidad</span>
+                        </div>
+                        <div class="p-4 flex items-center gap-6 hover:bg-[#202c33]">
+                            <svg class="w-6 h-6 text-[#8696a0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            <span class="text-[#e9edef]">Chats</span>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
 
-        // LOGIC
+        // NAVEGACIÓN
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // AUTH
         auth.onAuthStateChanged(user => {
             if (user) {
-                renderChat(user);
+                document.getElementById('userAvatar').textContent = user.phoneNumber ? user.phoneNumber.slice(-1) : 'J';
+                document.getElementById('configUserName').textContent = user.phoneNumber || 'Usuario JPRO';
+                showPage('chatPage');
+                initChat();
             } else {
-                renderLogin();
+                showPage('loginPage');
             }
         });
 
-        function renderLogin() {
-            app.innerHTML = LoginTemplate;
-            document.getElementById('loginBtn').onclick = login;
-            document.getElementById('registerBtn').onclick = register;
-
-            document.getElementById('password').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
+        // LOGIN CON TELÉFONO
+        let recaptchaVerifier;
+        window.onload = () => {
+            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                'size': 'invisible'
             });
-        }
+        };
 
-        function renderChat(user) {
-            app.innerHTML = ChatTemplate;
+        document.getElementById('loginBtn').onclick = async () => {
+            const phoneNumber = '+51' + document.getElementById('phoneNumber').value.replace(/\s/g, '');
+            const errorMsg = document.getElementById('errorMsg');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (phoneNumber.length < 12) {
+                errorMsg.textContent = 'Ingresa un número válido';
+                return;
+            }
 
-            document.getElementById('userInitial').textContent = user.email[0].toUpperCase();
+            loginBtn.textContent = 'ENVIANDO...';
+            loginBtn.disabled = true;
 
+            try {
+                const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
+                const code = prompt('Ingresa el código de 6 dígitos que te llegó por SMS:');
+                if (code) {
+                    await confirmationResult.confirm(code);
+                } else {
+                    throw new Error('Código cancelado');
+                }
+            } catch (e) {
+                errorMsg.textContent = 'Error: ' + e.message;
+                loginBtn.textContent = 'SIGUIENTE';
+                loginBtn.disabled = false;
+                recaptchaVerifier.render().then(widgetId => {
+                    grecaptcha.reset(widgetId);
+                });
+            }
+        };
+
+        // CHAT Y MENÚ
+        function initChat() {
             const menuBtn = document.getElementById('menuBtn');
             const menuDropdown = document.getElementById('menuDropdown');
-
+            
             menuBtn.onclick = (e) => {
                 e.stopPropagation();
                 menuDropdown.classList.toggle('hidden');
             };
-
+            
             document.body.onclick = () => menuDropdown.classList.add('hidden');
-
-            document.getElementById('logoutBtn').onclick = () => {
-                auth.signOut();
+            
+            document.getElementById('logoutBtn').onclick = () => auth.signOut();
+            
+            document.getElementById('configBtn').onclick = () => {
+                menuDropdown.classList.add('hidden');
+                showPage('configPage');
             };
-
+            
+            document.getElementById('backFromConfig').onclick = () => showPage('chatPage');
+            
             document.getElementById('newGroupBtn').onclick = () => {
-                const nombre = prompt('Nombre del grupo:');
-                if (nombre) alert('Grupo "' + nombre + '" creado. Próximamente: sistema de chat completo');
                 menuDropdown.classList.add('hidden');
+                alert('Función de crear grupo - Próximamente');
             };
-
+            
             document.getElementById('perfilBtn').onclick = () => {
-                alert('Usuario: ' + user.email);
                 menuDropdown.classList.add('hidden');
+                alert('Tu perfil - Próximamente');
             };
-        }
-
-        async function login() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-            const loginBtn = document.getElementById('loginBtn');
-
-            if (!email ||!password) {
-                errorMsg.textContent = 'Completa todos los campos';
-                return;
-            }
-
-            loginBtn.textContent = 'Entrando...';
-            loginBtn.disabled = true;
-
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (e) {
-                errorMsg.textContent = 'Error: ' + e.message;
-                loginBtn.textContent = 'Iniciar sesión';
-                loginBtn.disabled = false;
-            }
-        }
-
-        async function register() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-
-            if (!email ||!password) {
-                errorMsg.textContent = 'Completa todos los campos';
-                return;
-            }
-
-            if (password.length < 6) {
-                errorMsg.textContent = 'La contraseña debe tener 6 caracteres mínimo';
-                return;
-            }
-
-            try {
-                await auth.createUserWithEmailAndPassword(email, password);
-            } catch (e) {
-                errorMsg.textContent = 'Error: ' + e.message;
-            }
         }
     </script>
 </body>
